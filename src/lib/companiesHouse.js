@@ -1,4 +1,12 @@
-const BASE_URL = 'https://api.company-information.service.gov.uk';
+// On localhost hit the API directly; everywhere else use the Vercel proxy
+// so the browser isn't blocked by CORS.
+const isLocal =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+const BASE_URL = isLocal
+  ? 'https://api.company-information.service.gov.uk'
+  : '/api/companies-house';
 
 function makeAuthHeader(apiKey) {
   return 'Basic ' + btoa(apiKey + ':');

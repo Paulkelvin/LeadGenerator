@@ -42,7 +42,7 @@ export default function SearchFilters({ onSearch, isLoading }) {
       <div className="max-w-7xl mx-auto space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Date filter */}
-          <div>
+          <div className="min-w-0">
             <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wide">
               Incorporated After
             </label>
@@ -50,12 +50,12 @@ export default function SearchFilters({ onSearch, isLoading }) {
               type="date"
               value={incorporatedFrom}
               onChange={(e) => setIncorporatedFrom(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="w-full min-w-0 bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
           {/* Location filter */}
-          <div>
+          <div className="min-w-0">
             <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wide">
               Location (optional)
             </label>
@@ -69,7 +69,7 @@ export default function SearchFilters({ onSearch, isLoading }) {
           </div>
 
           {/* Search button */}
-          <div className="flex items-end">
+          <div className="flex items-end min-w-0">
             <button
               onClick={handleSearch}
               disabled={isLoading}
