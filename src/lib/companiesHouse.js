@@ -1,23 +1,28 @@
-// On localhost hit the API directly; everywhere else use the Vercel proxy
-// so the browser isn't blocked by CORS.
 const isLocal =
   typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-const BASE_URL = isLocal
-  ? 'https://api.company-information.service.gov.uk'
-  : '/api/companies-house';
 
 function makeAuthHeader(apiKey) {
   return 'Basic ' + btoa(apiKey + ':');
 }
 
-export async function searchCompanies({ apiKey, sicCodes, incorporatedFrom, location, startIndex = 0, size = 20 }) {
-  const headers = {
-    Authorization: makeAuthHeader(apiKey),
-    'Content-Type': 'application/json',
-  };
+// In dev: hit Companies House directly.
+// In production: route through /api/proxy to avoid CORS.
+function buildUrl(endpoint, params) {
+  if (isLocal) {
+    return `https://api.company-information.service.gov.uk${endpoint}?${params}`;
+  }
+  return `/api/proxy?endpoint=${encodeURIComponent(endpoint)}&${params}`;
+}
 
+export async function searchCompanies({
+  apiKey,
+  sicCodes,
+  incorporatedFrom,
+  location,
+  startIndex = 0,
+  size = 20,
+}) {
   const params = new URLSearchParams({
     company_status: 'active',
     size: String(size),
@@ -34,22 +39,16 @@ export async function searchCompanies({ apiKey, sicCodes, incorporatedFrom, loca
     params.set('location', location.trim());
   }
 
-  const url = `${BASE_URL}/advanced-search/companies?${params.toString()}`;
+  const url = buildUrl('/advanced-search/companies', params.toString());
 
-  const res = await fetch(url, { headers });
+  const res = await fetch(url, {
+    headers: { Authorization: makeAuthHeader(apiKey) },
+  });
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');
     throw new Error(`API error ${res.status}: ${text || res.statusText}`);
   }
 
-  const data = await res.json();
-  return data;
-}
-
-export async function getCompanyProfile(apiKey, companyNumber) {
-  const headers = { Authorization: makeAuthHeader(apiKey) };
-  const res = await fetch(`${BASE_URL}/company/${companyNumber}`, { headers });
-  if (!res.ok) throw new Error(`API error ${res.status}`);
   return res.json();
 }

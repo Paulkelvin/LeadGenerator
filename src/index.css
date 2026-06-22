@@ -12,3 +12,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Prevent iOS/Android zoom on input focus — browsers zoom when font-size < 16px */
+input,
+select,
+textarea {
+  font-size: 16px !important;
+}
