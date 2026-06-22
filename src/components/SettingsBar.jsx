@@ -13,12 +13,19 @@ function KeyField({ icon: Icon, label, value, placeholder, accentClass, focusCla
   }
 
   return (
-    <div className="flex items-center gap-2 min-w-0">
-      <div className={`flex items-center gap-1.5 text-xs font-medium whitespace-nowrap ${accentClass}`}>
+    <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+      {/* Label — hidden on very small screens to save space */}
+      <div className={`hidden sm:flex items-center gap-1.5 text-xs font-medium whitespace-nowrap flex-shrink-0 ${accentClass}`}>
         <Icon size={13} />
         {label}
       </div>
-      <div className="flex items-center gap-2 flex-1 min-w-0">
+      {/* Icon only on xs */}
+      <div className={`flex sm:hidden items-center flex-shrink-0 ${accentClass}`}>
+        <Icon size={14} />
+      </div>
+
+      {/* Input + Save */}
+      <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden">
         <div className="relative flex-1 min-w-0">
           <input
             type={show ? 'text' : 'password'}
@@ -26,7 +33,7 @@ function KeyField({ icon: Icon, label, value, placeholder, accentClass, focusCla
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && save()}
             placeholder={placeholder}
-            className={`w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-1.5 text-white placeholder-gray-500 focus:outline-none ${focusClass} pr-8`}
+            className={`w-full block bg-gray-800 border border-gray-600 rounded-lg px-3 py-1.5 text-white placeholder-gray-500 focus:outline-none ${focusClass} pr-8`}
           />
           <button
             onClick={() => setShow(!show)}
@@ -43,11 +50,14 @@ function KeyField({ icon: Icon, label, value, placeholder, accentClass, focusCla
         >
           {saved ? <><CheckCircle size={12} />Saved</> : 'Save'}
         </button>
+        {/* Get key link — hidden on mobile, visible from sm upward */}
         <a
           href={helpHref}
           target="_blank"
           rel="noopener noreferrer"
-          className={`text-xs whitespace-nowrap ${accentClass.includes('blue') ? 'text-blue-400 hover:text-blue-300' : 'text-purple-400 hover:text-purple-300'}`}
+          className={`hidden sm:block flex-shrink-0 text-xs whitespace-nowrap ${
+            accentClass.includes('blue') ? 'text-blue-400 hover:text-blue-300' : 'text-purple-400 hover:text-purple-300'
+          }`}
         >
           {helpLabel}
         </a>
@@ -64,7 +74,7 @@ export default function SettingsBar({ apiKey, hunterKey, onSaveApiKey, onSaveHun
           icon={Key}
           label="Companies House"
           value={apiKey}
-          placeholder="Paste API key…"
+          placeholder="Companies House API key…"
           accentClass="text-blue-400"
           focusClass="focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           onSave={onSaveApiKey}
@@ -75,7 +85,7 @@ export default function SettingsBar({ apiKey, hunterKey, onSaveApiKey, onSaveHun
           icon={Zap}
           label="Hunter.io"
           value={hunterKey}
-          placeholder="Optional — for email finding"
+          placeholder="Hunter.io key (optional)"
           accentClass="text-purple-400"
           focusClass="focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
           onSave={onSaveHunterKey}

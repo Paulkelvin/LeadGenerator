@@ -6,8 +6,14 @@
   box-sizing: border-box;
 }
 
+html,
 body {
+  overflow-x: hidden;
+  max-width: 100%;
   margin: 0;
+}
+
+body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
