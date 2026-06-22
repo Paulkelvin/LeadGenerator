@@ -51,6 +51,8 @@ function QuickLink({ href, label, className = '' }) {
   return (
     <a
       href={href}
+      target="_blank"
+      rel="noopener noreferrer"
       className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs border transition-colors ${className}`}
     >
       <ExternalLink size={11} />
@@ -252,7 +254,7 @@ export default function ResultsTable({ results, leads, onMarkLead, onUnmarkLead,
 
                   {/* Web search */}
                   <td className="px-4 py-3 text-center">
-                    <a href={googleUrl} title="Search for website" className="inline-flex items-center justify-center p-1.5 text-gray-500 hover:text-blue-400 transition-colors">
+                    <a href={googleUrl} target="_blank" rel="noopener noreferrer" title="Search for website" className="inline-flex items-center justify-center p-1.5 text-gray-500 hover:text-blue-400 transition-colors">
                       <ExternalLink size={15} />
                     </a>
                   </td>
