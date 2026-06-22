@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Search, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { SIC_CATEGORIES, ALL_SIC_CODES } from '../data/sicCodes';
+import { ANZSIC_CATEGORIES, ALL_ANZSIC_CODES } from '../data/anzsicCodes';
 
 function daysAgo(n) {
   const d = new Date();
@@ -8,11 +9,26 @@ function daysAgo(n) {
   return d.toISOString().split('T')[0];
 }
 
-export default function SearchFilters({ onSearch, isLoading }) {
+export default function SearchFilters({ country, onCountryChange, onSearch, isLoading }) {
   const [selectedCodes, setSelectedCodes] = useState([]);
   const [incorporatedFrom, setIncorporatedFrom] = useState(daysAgo(30));
   const [location, setLocation] = useState('');
   const [openCategory, setOpenCategory] = useState(null);
+
+  const isNZ = country === 'nz';
+  const categories = isNZ ? ANZSIC_CATEGORIES : SIC_CATEGORIES;
+  const allCodes = isNZ ? ALL_ANZSIC_CODES : ALL_SIC_CODES;
+
+  const accent = isNZ
+    ? { text: 'text-emerald-300', bg: 'bg-emerald-900/60', border: 'border-emerald-700/50', badge: 'bg-emerald-800 text-emerald-200', focus: 'focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500', btn: 'bg-emerald-700 hover:bg-emerald-600' }
+    : { text: 'text-blue-300', bg: 'bg-blue-900/60', border: 'border-blue-700/50', badge: 'bg-blue-800 text-blue-200', focus: 'focus:border-blue-500 focus:ring-1 focus:ring-blue-500', btn: 'bg-blue-600 hover:bg-blue-500' };
+
+  function switchCountry(c) {
+    if (c === country) return;
+    onCountryChange(c);
+    setSelectedCodes([]);
+    setOpenCategory(null);
+  }
 
   function toggleCode(code) {
     setSelectedCodes((prev) =>
@@ -34,23 +50,47 @@ export default function SearchFilters({ onSearch, isLoading }) {
   }
 
   function handleSearch() {
-    onSearch({ sicCodes: selectedCodes, incorporatedFrom, location });
+    onSearch({ country, sicCodes: selectedCodes, incorporatedFrom, location });
   }
 
   return (
     <div className="bg-gray-900 border-b border-gray-700 px-4 py-5">
       <div className="max-w-7xl mx-auto space-y-4">
+
+        {/* Country toggle */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide mr-1">Country</span>
+          <div className="flex rounded-lg overflow-hidden border border-gray-700">
+            <button
+              onClick={() => switchCountry('uk')}
+              className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                !isNZ ? 'bg-blue-700 text-white' : 'bg-gray-800 text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              🇬🇧 UK
+            </button>
+            <button
+              onClick={() => switchCountry('nz')}
+              className={`px-3 py-1.5 text-sm font-medium transition-colors border-l border-gray-700 ${
+                isNZ ? 'bg-emerald-700 text-white' : 'bg-gray-800 text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              🇳🇿 NZ
+            </button>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Date filter */}
           <div className="min-w-0 overflow-hidden">
             <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wide">
-              Incorporated After
+              {isNZ ? 'Registered After' : 'Incorporated After'}
             </label>
             <input
               type="date"
               value={incorporatedFrom}
               onChange={(e) => setIncorporatedFrom(e.target.value)}
-              className="w-full block bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className={`w-full block bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none ${accent.focus}`}
             />
           </div>
 
@@ -63,8 +103,8 @@ export default function SearchFilters({ onSearch, isLoading }) {
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="e.g. Birmingham, London, Manchester"
-              className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              placeholder={isNZ ? 'e.g. Auckland, Wellington, Christchurch' : 'e.g. Birmingham, London, Manchester'}
+              className={`w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none ${accent.focus}`}
             />
           </div>
 
@@ -73,7 +113,7 @@ export default function SearchFilters({ onSearch, isLoading }) {
             <button
               onClick={handleSearch}
               disabled={isLoading}
-              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+              className={`w-full px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${accent.btn}`}
             >
               {isLoading ? (
                 <>
@@ -90,13 +130,13 @@ export default function SearchFilters({ onSearch, isLoading }) {
           </div>
         </div>
 
-        {/* SIC Code selector */}
+        {/* Industry / code selector */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-              Industry / SIC Codes
+              {isNZ ? 'Industry / ANZSIC Codes' : 'Industry / SIC Codes'}
               {selectedCodes.length > 0 && (
-                <span className="ml-2 text-blue-400">({selectedCodes.length} selected)</span>
+                <span className={`ml-2 ${accent.text}`}>({selectedCodes.length} selected)</span>
               )}
             </label>
             {selectedCodes.length > 0 && (
@@ -114,11 +154,11 @@ export default function SearchFilters({ onSearch, isLoading }) {
           {selectedCodes.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-3">
               {selectedCodes.map((code) => {
-                const entry = ALL_SIC_CODES.find((s) => s.code === code);
+                const entry = allCodes.find((s) => s.code === code);
                 return (
                   <span
                     key={code}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-900/60 text-blue-300 text-xs rounded-full border border-blue-700/50"
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border ${accent.bg} ${accent.text} ${accent.border}`}
                   >
                     {code} – {entry?.label}
                     <button onClick={() => toggleCode(code)} className="hover:text-white">
@@ -132,7 +172,7 @@ export default function SearchFilters({ onSearch, isLoading }) {
 
           {/* Category accordion */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-            {SIC_CATEGORIES.map((cat) => {
+            {categories.map((cat) => {
               const catCodes = cat.codes.map((c) => c.code);
               const allSelected = catCodes.every((c) => selectedCodes.includes(c));
               const someSelected = catCodes.some((c) => selectedCodes.includes(c));
@@ -145,15 +185,11 @@ export default function SearchFilters({ onSearch, isLoading }) {
                     onClick={() => setOpenCategory(isOpen ? null : cat.label)}
                   >
                     <span className="flex items-center gap-2">
-                      <span
-                        className={`text-sm font-medium ${
-                          someSelected ? 'text-blue-300' : 'text-gray-300'
-                        }`}
-                      >
+                      <span className={`text-sm font-medium ${someSelected ? accent.text : 'text-gray-300'}`}>
                         {cat.label}
                       </span>
                       {someSelected && (
-                        <span className="text-xs bg-blue-800 text-blue-200 px-1.5 py-0.5 rounded-full">
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${accent.badge}`}>
                           {catCodes.filter((c) => selectedCodes.includes(c)).length}
                         </span>
                       )}
@@ -166,7 +202,7 @@ export default function SearchFilters({ onSearch, isLoading }) {
                         }}
                         className={`text-xs px-1.5 py-0.5 rounded transition-colors ${
                           allSelected
-                            ? 'bg-blue-700 text-blue-100 hover:bg-blue-600'
+                            ? `${isNZ ? 'bg-emerald-700 text-emerald-100 hover:bg-emerald-600' : 'bg-blue-700 text-blue-100 hover:bg-blue-600'}`
                             : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
                         }`}
                       >
@@ -191,7 +227,7 @@ export default function SearchFilters({ onSearch, isLoading }) {
                             type="checkbox"
                             checked={selectedCodes.includes(code)}
                             onChange={() => toggleCode(code)}
-                            className="mt-0.5 accent-blue-500"
+                            className={`mt-0.5 ${isNZ ? 'accent-emerald-500' : 'accent-blue-500'}`}
                           />
                           <span className="text-xs text-gray-400 group-hover:text-gray-200 leading-tight">
                             <span className="font-mono text-gray-500">{code}</span> {label}

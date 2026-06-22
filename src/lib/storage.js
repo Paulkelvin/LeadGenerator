@@ -1,5 +1,6 @@
 const KEYS = {
   API_KEY: 'ch_api_key',
+  NZ_API_KEY: 'nz_api_key',
   HUNTER_KEY: 'hunter_api_key',
   LEADS: 'ch_leads',
 };
@@ -10,6 +11,14 @@ export function getApiKey() {
 
 export function setApiKey(key) {
   localStorage.setItem(KEYS.API_KEY, key);
+}
+
+export function getNzApiKey() {
+  return localStorage.getItem(KEYS.NZ_API_KEY) || '';
+}
+
+export function setNzApiKey(key) {
+  localStorage.setItem(KEYS.NZ_API_KEY, key);
 }
 
 export function getHunterKey() {

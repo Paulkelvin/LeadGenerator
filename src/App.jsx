@@ -7,13 +7,21 @@ import Pagination from './components/Pagination';
 import LeadsPanel from './components/LeadsPanel';
 import SetupScreen from './components/SetupScreen';
 import { searchCompanies } from './lib/companiesHouse';
-import { getApiKey, setApiKey, getHunterKey, setHunterKey, getLeads, saveLeads } from './lib/storage';
+import { searchNZCompanies } from './lib/nzbnApi';
+import {
+  getApiKey, setApiKey,
+  getNzApiKey, setNzApiKey,
+  getHunterKey, setHunterKey,
+  getLeads, saveLeads,
+} from './lib/storage';
 
 const PAGE_SIZE = 20;
 
 export default function App() {
   const [apiKey, setApiKeyState] = useState(getApiKey);
+  const [nzApiKey, setNzApiKeyState] = useState(getNzApiKey);
   const [hunterKey, setHunterKeyState] = useState(getHunterKey);
+  const [country, setCountry] = useState('uk');
   const [tab, setTab] = useState('search');
 
   // Search state
@@ -33,6 +41,11 @@ export default function App() {
     setApiKeyState(key);
   }
 
+  function handleSaveNzApiKey(key) {
+    setNzApiKey(key);
+    setNzApiKeyState(key);
+  }
+
   function handleSaveHunterKey(key) {
     setHunterKey(key);
     setHunterKeyState(key);
@@ -44,14 +57,26 @@ export default function App() {
     setCorsBlocked(false);
 
     try {
-      const data = await searchCompanies({
-        apiKey,
-        sicCodes: filters.sicCodes,
-        incorporatedFrom: filters.incorporatedFrom,
-        location: filters.location,
-        startIndex: newStartIndex,
-        size: PAGE_SIZE,
-      });
+      let data;
+      if (filters.country === 'nz') {
+        data = await searchNZCompanies({
+          apiKey: nzApiKey,
+          sicCodes: filters.sicCodes,
+          incorporatedFrom: filters.incorporatedFrom,
+          location: filters.location,
+          startIndex: newStartIndex,
+          size: PAGE_SIZE,
+        });
+      } else {
+        data = await searchCompanies({
+          apiKey,
+          sicCodes: filters.sicCodes,
+          incorporatedFrom: filters.incorporatedFrom,
+          location: filters.location,
+          startIndex: newStartIndex,
+          size: PAGE_SIZE,
+        });
+      }
 
       const items = data.items || [];
       setResults(items);
@@ -113,6 +138,8 @@ export default function App() {
     });
   }
 
+  const activeKey = country === 'nz' ? nzApiKey : apiKey;
+
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col overflow-x-hidden w-full">
       {/* Header */}
@@ -123,9 +150,9 @@ export default function App() {
               <Building2 size={18} className="text-white" />
             </div>
             <div>
-              <h1 className="text-base font-bold text-white leading-none">UK Lead Generator</h1>
+              <h1 className="text-base font-bold text-white leading-none">Lead Generator</h1>
               <p className="text-xs text-gray-500 leading-none mt-0.5">
-                Companies House new registrations
+                New business registrations
               </p>
             </div>
           </div>
@@ -169,8 +196,10 @@ export default function App() {
       {/* API Key bar */}
       <SettingsBar
         apiKey={apiKey}
+        nzApiKey={nzApiKey}
         hunterKey={hunterKey}
         onSaveApiKey={handleSaveKey}
+        onSaveNzApiKey={handleSaveNzApiKey}
         onSaveHunterKey={handleSaveHunterKey}
       />
 
@@ -178,11 +207,16 @@ export default function App() {
       <main className="flex-1 flex flex-col pb-6">
         {tab === 'search' && (
           <>
-            {!apiKey ? (
-              <SetupScreen />
+            {!activeKey ? (
+              <SetupScreen country={country} />
             ) : (
               <>
-                <SearchFilters onSearch={handleSearch} isLoading={isLoading} />
+                <SearchFilters
+                  country={country}
+                  onCountryChange={setCountry}
+                  onSearch={handleSearch}
+                  isLoading={isLoading}
+                />
 
                 <div className="max-w-7xl mx-auto w-full px-4 pt-4 flex-1 flex flex-col gap-4">
                   {/* CORS warning */}
@@ -194,11 +228,8 @@ export default function App() {
                           CORS / Network Error
                         </p>
                         <p className="text-xs text-orange-400/80 leading-relaxed">
-                          The browser was blocked from reaching the Companies House API directly.
-                          Run the included Express proxy server to forward requests.
-                          See{' '}
-                          <code className="bg-orange-900/40 px-1 rounded">proxy/README.md</code>{' '}
-                          for setup instructions, or check the browser console for details.
+                          The browser was blocked from reaching the API directly.
+                          Check your API key or try again. See the browser console for details.
                         </p>
                       </div>
                     </div>
@@ -254,7 +285,7 @@ export default function App() {
                         No companies found
                       </h3>
                       <p className="text-gray-500 max-w-sm text-sm">
-                        Try broadening your filters — select more SIC codes, extend the date
+                        Try broadening your filters — select more industry codes, extend the date
                         range, or leave the location blank.
                       </p>
                     </div>
@@ -270,8 +301,8 @@ export default function App() {
                         Choose your filters and search
                       </h3>
                       <p className="text-gray-500 max-w-sm text-sm">
-                        Select one or more industry categories, set a date range, and optionally
-                        filter by location to find new UK companies.
+                        Select a country, pick industry categories, set a date range, and optionally
+                        filter by location to find new companies.
                       </p>
                     </div>
                   )}
@@ -299,9 +330,17 @@ export default function App() {
           rel="noopener noreferrer"
           className="text-gray-600 hover:text-gray-400"
         >
-          Companies House API
-        </a>{' '}
-        · Rate limit: 600 req / 5 min
+          Companies House
+        </a>
+        {' '}and{' '}
+        <a
+          href="https://developer.business.govt.nz/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-gray-600 hover:text-gray-400"
+        >
+          NZBN
+        </a>
       </footer>
     </div>
   );

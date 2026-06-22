@@ -4,6 +4,7 @@ import {
   Users, Link2, Loader2,
 } from 'lucide-react';
 import { SIC_CODE_MAP } from '../data/sicCodes';
+import { ANZSIC_CODE_MAP } from '../data/anzsicCodes';
 import { getOfficers } from '../lib/companiesHouse';
 
 function formatAddress(addr) {
@@ -85,61 +86,71 @@ function OfficerRow({ officer, companyName }) {
 }
 
 function ExpandedRow({ company, apiKey, colSpan }) {
+  const isNZ = company._country === 'nz';
+
   const [officers, setOfficers] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch on first render
+  // Fetch on first render (UK only)
   useState(() => {
+    if (isNZ) return;
     setLoading(true);
     getOfficers(apiKey, company.company_number)
       .then((data) => { setOfficers(data); setLoading(false); })
       .catch((err) => { setError(err.message); setLoading(false); });
   });
 
-  const chUrl = `https://find-and-update.company-information.service.gov.uk/company/${company.company_number}`;
   const liCompany = `https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent(company.company_name)}`;
   const liPeople = `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(company.company_name + ' director')}`;
   const googleMaps = `https://www.google.com/maps/search/${encodeURIComponent(formatAddress(company.registered_office_address))}`;
+  const chUrl = `https://find-and-update.company-information.service.gov.uk/company/${company.company_number}`;
+  const nzbnUrl = `https://www.nzbn.govt.nz/mynzbn/nzbndetails/${company.company_number}/`;
 
   return (
     <tr>
       <td colSpan={colSpan} className="bg-gray-800/50 px-5 py-4 border-b border-gray-700">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-          {/* Officers column */}
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-2">
-              <Users size={13} className="text-gray-500" />
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                Directors &amp; Officers
-              </span>
-            </div>
-
-            {loading && (
-              <div className="flex items-center gap-2 text-gray-500 text-sm py-2">
-                <Loader2 size={14} className="animate-spin" /> Loading…
+          {/* Officers column — UK only */}
+          {!isNZ && (
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Users size={13} className="text-gray-500" />
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                  Directors &amp; Officers
+                </span>
               </div>
-            )}
-            {error && <p className="text-xs text-red-400 py-2">{error}</p>}
-            {officers && officers.length === 0 && (
-              <p className="text-xs text-gray-600 py-2">No active officers found.</p>
-            )}
-            {officers && officers.map((o) => (
-              <OfficerRow key={o.name + o.appointed_on} officer={o} companyName={company.company_name} />
-            ))}
-          </div>
+
+              {loading && (
+                <div className="flex items-center gap-2 text-gray-500 text-sm py-2">
+                  <Loader2 size={14} className="animate-spin" /> Loading…
+                </div>
+              )}
+              {error && <p className="text-xs text-red-400 py-2">{error}</p>}
+              {officers && officers.length === 0 && (
+                <p className="text-xs text-gray-600 py-2">No active officers found.</p>
+              )}
+              {officers && officers.map((o) => (
+                <OfficerRow key={o.name + o.appointed_on} officer={o} companyName={company.company_name} />
+              ))}
+            </div>
+          )}
 
           {/* Quick links column */}
-          <div>
+          <div className={isNZ ? 'md:col-span-3' : ''}>
             <div className="flex items-center gap-2 mb-2">
               <Link2 size={13} className="text-gray-500" />
               <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
                 Quick Links
               </span>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <QuickLink href={chUrl} label="CH Public Profile" className="border-gray-700 text-gray-300 hover:bg-gray-700 justify-start" />
+            <div className={`flex gap-1.5 ${isNZ ? 'flex-wrap' : 'flex-col'}`}>
+              {isNZ ? (
+                <QuickLink href={nzbnUrl} label="NZBN Registry" className="border-emerald-800/60 text-emerald-400 hover:bg-emerald-900/30 justify-start" />
+              ) : (
+                <QuickLink href={chUrl} label="CH Public Profile" className="border-gray-700 text-gray-300 hover:bg-gray-700 justify-start" />
+              )}
               <QuickLink href={liCompany} label="LinkedIn Company" className="border-blue-800/60 text-blue-400 hover:bg-blue-900/30 justify-start" />
               <QuickLink href={liPeople} label="LinkedIn – Find People" className="border-blue-800/60 text-blue-400 hover:bg-blue-900/30 justify-start" />
               <QuickLink href={googleMaps} label="Google Maps" className="border-gray-700 text-gray-400 hover:bg-gray-800 justify-start" />
@@ -234,7 +245,7 @@ export default function ResultsTable({ results, leads, onMarkLead, onUnmarkLead,
                         {sics.map((code) => (
                           <span key={code} className="text-xs text-gray-400">
                             <span className="font-mono text-gray-500">{code}</span>
-                            {SIC_CODE_MAP[code] && <span className="text-gray-600"> – {SIC_CODE_MAP[code]}</span>}
+                            {(SIC_CODE_MAP[code] || ANZSIC_CODE_MAP[code]) && <span className="text-gray-600"> – {SIC_CODE_MAP[code] || ANZSIC_CODE_MAP[code]}</span>}
                           </span>
                         ))}
                       </div>
