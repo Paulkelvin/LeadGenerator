@@ -9,10 +9,11 @@ function makeAuthHeader(apiKey) {
 // In dev: hit Companies House directly.
 // In production: route through /api/proxy to avoid CORS.
 function buildUrl(endpoint, params) {
+  const qs = params ? `?${params}` : '';
   if (isLocal) {
-    return `https://api.company-information.service.gov.uk${endpoint}?${params}`;
+    return `https://api.company-information.service.gov.uk${endpoint}${qs}`;
   }
-  return `/api/proxy?endpoint=${encodeURIComponent(endpoint)}&${params}`;
+  return `/api/proxy?endpoint=${encodeURIComponent(endpoint)}${params ? '&' + params : ''}`;
 }
 
 export async function searchCompanies({
@@ -51,4 +52,17 @@ export async function searchCompanies({
   }
 
   return res.json();
+}
+
+export async function getOfficers(apiKey, companyNumber) {
+  const url = buildUrl(`/company/${companyNumber}/officers`, '');
+
+  const res = await fetch(url, {
+    headers: { Authorization: makeAuthHeader(apiKey) },
+  });
+
+  if (!res.ok) throw new Error(`Officers API error ${res.status}`);
+
+  const data = await res.json();
+  return (data.items || []).filter((o) => !o.resigned_on);
 }

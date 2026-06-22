@@ -7,12 +7,13 @@ import Pagination from './components/Pagination';
 import LeadsPanel from './components/LeadsPanel';
 import SetupScreen from './components/SetupScreen';
 import { searchCompanies } from './lib/companiesHouse';
-import { getApiKey, setApiKey, getLeads, saveLeads } from './lib/storage';
+import { getApiKey, setApiKey, getHunterKey, setHunterKey, getLeads, saveLeads } from './lib/storage';
 
 const PAGE_SIZE = 20;
 
 export default function App() {
   const [apiKey, setApiKeyState] = useState(getApiKey);
+  const [hunterKey, setHunterKeyState] = useState(getHunterKey);
   const [tab, setTab] = useState('search');
 
   // Search state
@@ -30,6 +31,11 @@ export default function App() {
   function handleSaveKey(key) {
     setApiKey(key);
     setApiKeyState(key);
+  }
+
+  function handleSaveHunterKey(key) {
+    setHunterKey(key);
+    setHunterKeyState(key);
   }
 
   async function runSearch(filters, newStartIndex = 0) {
@@ -161,7 +167,12 @@ export default function App() {
       </header>
 
       {/* API Key bar */}
-      <SettingsBar apiKey={apiKey} onSave={handleSaveKey} />
+      <SettingsBar
+        apiKey={apiKey}
+        hunterKey={hunterKey}
+        onSaveApiKey={handleSaveKey}
+        onSaveHunterKey={handleSaveHunterKey}
+      />
 
       {/* Main content */}
       <main className="flex-1 flex flex-col pb-6">
@@ -223,6 +234,7 @@ export default function App() {
                         leads={leads}
                         onMarkLead={markLead}
                         onUnmarkLead={unmarkLead}
+                        apiKey={apiKey}
                       />
 
                       <Pagination
@@ -272,7 +284,7 @@ export default function App() {
         {tab === 'leads' && (
           <div className="max-w-7xl mx-auto w-full px-4 pt-4 flex-1">
             <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
-              <LeadsPanel leads={leads} onUpdate={updateLead} onRemove={unmarkLead} />
+              <LeadsPanel leads={leads} hunterKey={hunterKey} onUpdate={updateLead} onRemove={unmarkLead} />
             </div>
           </div>
         )}
