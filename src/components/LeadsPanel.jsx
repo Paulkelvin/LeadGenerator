@@ -152,7 +152,7 @@ export default function LeadsPanel({ leads, hunterKey, onUpdate, onRemove }) {
                       </div>
                       <div className="flex items-center gap-0.5 mt-0.5 flex-shrink-0">
                         <CopyBtn text={lead.company_name} />
-                        <a href={googleUrl} target="_blank" rel="noopener noreferrer" className="p-1 text-gray-600 hover:text-blue-400 transition-colors" title="Google search">
+                        <a href={googleUrl} className="p-1 text-gray-600 hover:text-blue-400 transition-colors" title="Google search">
                           <ExternalLink size={13} />
                         </a>
                       </div>
