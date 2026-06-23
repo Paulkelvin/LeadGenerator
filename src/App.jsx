@@ -63,7 +63,11 @@ export default function App() {
   useEffect(() => {
     if (!supabaseEnabled) return;
 
-    fetchAll()
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Supabase timeout')), 5000)
+    );
+
+    Promise.race([fetchAll(), timeout])
       .then(({ settings, leads: dbLeads, history: dbHistory }) => {
         const localLeads = getLeads();
         const localHistory = getSearchHistory();
