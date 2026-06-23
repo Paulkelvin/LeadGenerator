@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Building2, Star, AlertTriangle, Info } from 'lucide-react';
+import { Building2, Star, AlertTriangle, Info, History } from 'lucide-react';
 import SettingsBar from './components/SettingsBar';
 import SearchFilters from './components/SearchFilters';
 import ResultsTable from './components/ResultsTable';
 import Pagination from './components/Pagination';
 import LeadsPanel from './components/LeadsPanel';
+import HistoryPanel from './components/HistoryPanel';
 import SetupScreen from './components/SetupScreen';
 import { searchCompanies } from './lib/companiesHouse';
 import { searchNZCompanies } from './lib/nzbnApi';
@@ -13,6 +14,7 @@ import {
   getNzApiKey, setNzApiKey,
   getHunterKey, setHunterKey,
   getLeads, saveLeads,
+  getSearchHistory, saveSearchHistory, addSearchHistory,
 } from './lib/storage';
 
 const PAGE_SIZE = 20;
@@ -33,8 +35,23 @@ export default function App() {
   const [startIndex, setStartIndex] = useState(0);
   const [lastFilters, setLastFilters] = useState(null);
 
-  // Leads state
-  const [leads, setLeads] = useState(getLeads);
+  // Search history
+  const [searchHistory, setSearchHistory] = useState(getSearchHistory);
+
+  // Leads — migrate legacy leads (no status field) on boot
+  const [leads, setLeads] = useState(() =>
+    getLeads().map((l) => {
+      if (!l._meta?.status) {
+        const hasContact = l._meta?.email || l._meta?.phone;
+        return {
+          ...l,
+          _country: l._country || 'uk',
+          _meta: { ...l._meta, status: hasContact ? 'has_contact' : 'new' },
+        };
+      }
+      return { ...l, _country: l._country || 'uk' };
+    })
+  );
 
   function handleSaveKey(key) {
     setApiKey(key);
@@ -82,6 +99,21 @@ export default function App() {
       setResults(items);
       setTotal(data.hits || data.total_results || items.length);
       setStartIndex(newStartIndex);
+
+      // Record search history (only on first page, not pagination)
+      if (newStartIndex === 0) {
+        const entry = {
+          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+          timestamp: new Date().toISOString(),
+          country: filters.country || 'uk',
+          location: filters.location || '',
+          sicCodes: filters.sicCodes || [],
+          incorporatedFrom: filters.incorporatedFrom || '',
+          resultCount: data.hits || data.total_results || items.length,
+        };
+        const newHistory = addSearchHistory(entry);
+        setSearchHistory(newHistory);
+      }
     } catch (err) {
       const msg = err.message.toLowerCase();
       if (
@@ -109,10 +141,32 @@ export default function App() {
     if (lastFilters) runSearch(lastFilters, newStartIndex);
   }
 
+  function handleRerunSearch(entry) {
+    const filters = {
+      country: entry.country,
+      sicCodes: entry.sicCodes,
+      incorporatedFrom: entry.incorporatedFrom,
+      location: entry.location,
+    };
+    setCountry(entry.country);
+    setLastFilters(filters);
+    setTab('search');
+    runSearch(filters, 0);
+  }
+
+  function handleClearHistory() {
+    saveSearchHistory([]);
+    setSearchHistory([]);
+  }
+
   function markLead(company) {
     setLeads((prev) => {
       if (prev.find((l) => l.company_number === company.company_number)) return prev;
-      const updated = [...prev, { ...company, _meta: {} }];
+      const updated = [...prev, {
+        ...company,
+        _country: company._country || 'uk',
+        _meta: { status: 'new' },
+      }];
       saveLeads(updated);
       return updated;
     });
@@ -128,11 +182,26 @@ export default function App() {
 
   function updateLead(companyNumber, fields) {
     setLeads((prev) => {
-      const updated = prev.map((l) =>
-        l.company_number === companyNumber
-          ? { ...l, _meta: { ...l._meta, ...fields } }
-          : l
-      );
+      const updated = prev.map((l) => {
+        if (l.company_number !== companyNumber) return l;
+
+        const newMeta = { ...l._meta, ...fields };
+
+        // Auto-advance to has_contact when email or phone becomes non-empty
+        const hadContact = l._meta?.email || l._meta?.phone;
+        const nowHasContact = newMeta.email || newMeta.phone;
+        const currentStatus = newMeta.status || 'new';
+        if (!hadContact && nowHasContact && (currentStatus === 'new' || currentStatus === 'parked')) {
+          newMeta.status = 'has_contact';
+        }
+
+        // Stamp contacted_at on first transition to 'contacted'
+        if (fields.status === 'contacted' && !l._meta?.contacted_at) {
+          newMeta.contacted_at = new Date().toISOString();
+        }
+
+        return { ...l, _meta: newMeta };
+      });
       saveLeads(updated);
       return updated;
     });
@@ -186,6 +255,22 @@ export default function App() {
               {leads.length > 0 && (
                 <span className="text-xs bg-yellow-800/70 text-yellow-300 px-1.5 py-0.5 rounded-full">
                   {leads.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setTab('history')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                tab === 'history'
+                  ? 'bg-gray-700 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              <History size={13} />
+              History
+              {searchHistory.length > 0 && (
+                <span className="text-xs bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded-full">
+                  {searchHistory.length}
                 </span>
               )}
             </button>
@@ -316,6 +401,18 @@ export default function App() {
           <div className="max-w-7xl mx-auto w-full px-4 pt-4 flex-1">
             <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
               <LeadsPanel leads={leads} hunterKey={hunterKey} onUpdate={updateLead} onRemove={unmarkLead} />
+            </div>
+          </div>
+        )}
+
+        {tab === 'history' && (
+          <div className="max-w-7xl mx-auto w-full px-4 pt-4 flex-1">
+            <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
+              <HistoryPanel
+                history={searchHistory}
+                onRerun={handleRerunSearch}
+                onClear={handleClearHistory}
+              />
             </div>
           </div>
         )}

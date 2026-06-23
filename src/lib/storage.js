@@ -3,6 +3,7 @@ const KEYS = {
   NZ_API_KEY: 'nz_api_key',
   HUNTER_KEY: 'hunter_api_key',
   LEADS: 'ch_leads',
+  SEARCH_HISTORY: 'lead_search_history',
 };
 
 export function getApiKey() {
@@ -39,4 +40,23 @@ export function getLeads() {
 
 export function saveLeads(leads) {
   localStorage.setItem(KEYS.LEADS, JSON.stringify(leads));
+}
+
+export function getSearchHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(KEYS.SEARCH_HISTORY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+export function saveSearchHistory(entries) {
+  localStorage.setItem(KEYS.SEARCH_HISTORY, JSON.stringify(entries));
+}
+
+export function addSearchHistory(entry) {
+  const history = getSearchHistory();
+  const updated = [entry, ...history].slice(0, 25);
+  saveSearchHistory(updated);
+  return updated;
 }
