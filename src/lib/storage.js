@@ -1,7 +1,17 @@
+import {
+  supabaseEnabled,
+  saveLeads as dbSaveLeads,
+  saveHistory as dbSaveHistory,
+  saveSettings as dbSaveSettings,
+} from './supabase';
+
 const KEYS = {
   API_KEY: 'ch_api_key',
   LEADS: 'ch_leads',
+  SEARCH_HISTORY: 'lead_search_history',
 };
+
+// --- Synchronous localStorage functions (used for initial state seeding) ---
 
 export function getApiKey() {
   return localStorage.getItem(KEYS.API_KEY) || '';
@@ -21,4 +31,47 @@ export function getLeads() {
 
 export function saveLeads(leads) {
   localStorage.setItem(KEYS.LEADS, JSON.stringify(leads));
+}
+
+export function getSearchHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(KEYS.SEARCH_HISTORY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+export function saveSearchHistory(entries) {
+  localStorage.setItem(KEYS.SEARCH_HISTORY, JSON.stringify(entries));
+}
+
+export function addSearchHistory(entry) {
+  const history = getSearchHistory();
+  const updated = [entry, ...history].slice(0, 25);
+  saveSearchHistory(updated);
+  return updated;
+}
+
+// --- Async dual-mode functions (write to Supabase + localStorage cache) ---
+
+export async function saveLeadsAsync(arr) {
+  saveLeads(arr);
+  if (supabaseEnabled) await dbSaveLeads(arr);
+}
+
+export async function saveHistoryAsync(arr) {
+  saveSearchHistory(arr);
+  if (supabaseEnabled) await dbSaveHistory(arr);
+}
+
+export async function saveSettingsAsync({ chApiKey }) {
+  setApiKey(chApiKey);
+  if (supabaseEnabled) await dbSaveSettings({ chApiKey, nzApiKey: '', hunterKey: '' });
+}
+
+export async function addSearchHistoryAsync(entry) {
+  const history = getSearchHistory();
+  const updated = [entry, ...history].slice(0, 25);
+  await saveHistoryAsync(updated);
+  return updated;
 }
