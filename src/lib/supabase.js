@@ -14,14 +14,16 @@ export async function fetchAll() {
     supabase.from('search_history').select('data').eq('id', 1).single(),
   ]);
 
-  if (settingsRes.error) throw settingsRes.error;
-  if (leadsRes.error) throw leadsRes.error;
-  if (historyRes.error) throw historyRes.error;
+  const notFound = (e) => e?.code === 'PGRST116';
+
+  if (settingsRes.error && !notFound(settingsRes.error)) throw settingsRes.error;
+  if (leadsRes.error && !notFound(leadsRes.error)) throw leadsRes.error;
+  if (historyRes.error && !notFound(historyRes.error)) throw historyRes.error;
 
   return {
-    settings: settingsRes.data,
-    leads: leadsRes.data.data || [],
-    history: historyRes.data.data || [],
+    settings: settingsRes.data ?? {},
+    leads: leadsRes.data?.data ?? [],
+    history: historyRes.data?.data ?? [],
   };
 }
 
