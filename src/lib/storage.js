@@ -16,7 +16,7 @@ const KEYS = {
 // --- Synchronous localStorage functions (used for initial state seeding) ---
 
 export function getApiKey() {
-  return localStorage.getItem(KEYS.API_KEY) || import.meta.env.VITE_CH_API_KEY || '';
+  return localStorage.getItem(KEYS.API_KEY) || __CH_API_KEY__ || '';
 }
 
 export function setApiKey(key) {
