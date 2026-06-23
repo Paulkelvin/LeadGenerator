@@ -1,3 +1,10 @@
+import {
+  supabaseEnabled,
+  saveLeads as dbSaveLeads,
+  saveHistory as dbSaveHistory,
+  saveSettings as dbSaveSettings,
+} from './supabase';
+
 const KEYS = {
   API_KEY: 'ch_api_key',
   NZ_API_KEY: 'nz_api_key',
@@ -5,6 +12,8 @@ const KEYS = {
   LEADS: 'ch_leads',
   SEARCH_HISTORY: 'lead_search_history',
 };
+
+// --- Synchronous localStorage functions (used for initial state seeding) ---
 
 export function getApiKey() {
   return localStorage.getItem(KEYS.API_KEY) || '';
@@ -58,5 +67,37 @@ export function addSearchHistory(entry) {
   const history = getSearchHistory();
   const updated = [entry, ...history].slice(0, 25);
   saveSearchHistory(updated);
+  return updated;
+}
+
+// --- Async dual-mode functions (write to Supabase + localStorage cache) ---
+
+export async function saveLeadsAsync(arr) {
+  saveLeads(arr);
+  if (supabaseEnabled) await dbSaveLeads(arr);
+}
+
+export async function saveHistoryAsync(arr) {
+  saveSearchHistory(arr);
+  if (supabaseEnabled) await dbSaveHistory(arr);
+}
+
+export async function saveSettingsAsync({ chApiKey, nzApiKey, hunterKey }) {
+  if (chApiKey !== undefined) setApiKey(chApiKey);
+  if (nzApiKey !== undefined) setNzApiKey(nzApiKey);
+  if (hunterKey !== undefined) setHunterKey(hunterKey);
+  if (supabaseEnabled) {
+    await dbSaveSettings({
+      chApiKey: chApiKey || '',
+      nzApiKey: nzApiKey || '',
+      hunterKey: hunterKey || '',
+    });
+  }
+}
+
+export async function addSearchHistoryAsync(entry) {
+  const history = getSearchHistory();
+  const updated = [entry, ...history].slice(0, 25);
+  await saveHistoryAsync(updated);
   return updated;
 }
