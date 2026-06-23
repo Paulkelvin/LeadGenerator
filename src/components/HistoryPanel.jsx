@@ -9,6 +9,12 @@ function formatTs(iso) {
   }) + ' · ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
+function fmtDate(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' });
+}
+
 function IndustriesSummary({ codes, country }) {
   if (!codes || codes.length === 0) {
     return <span className="text-gray-600">Any</span>;
@@ -62,7 +68,7 @@ export default function HistoryPanel({ history, onRerun, onClear }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-700 bg-gray-800/50">
-              {['Date & Time', 'Country', 'Location', 'Industries', 'Results', ''].map((h) => (
+              {['Date & Time', 'Country', 'Location', 'Date Range', 'Industries', 'Results', ''].map((h) => (
                 <th
                   key={h}
                   className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide whitespace-nowrap"
@@ -83,6 +89,17 @@ export default function HistoryPanel({ history, onRerun, onClear }) {
                 </td>
                 <td className="px-4 py-3 text-gray-400 text-xs">
                   {entry.location || <span className="text-gray-600">—</span>}
+                </td>
+                <td className="px-4 py-3 text-xs whitespace-nowrap">
+                  {fmtDate(entry.incorporatedFrom) ? (
+                    <span className="text-gray-300">
+                      {fmtDate(entry.incorporatedFrom)}
+                      <span className="text-gray-600 mx-1">→</span>
+                      {fmtDate(entry.incorporatedTo) || <span className="text-gray-600">now</span>}
+                    </span>
+                  ) : (
+                    <span className="text-gray-600">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 max-w-[220px]">
                   <IndustriesSummary codes={entry.sicCodes} country={entry.country} />

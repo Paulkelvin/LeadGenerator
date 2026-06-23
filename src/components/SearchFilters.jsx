@@ -12,6 +12,7 @@ function daysAgo(n) {
 export default function SearchFilters({ country, onCountryChange, onSearch, isLoading }) {
   const [selectedCodes, setSelectedCodes] = useState([]);
   const [incorporatedFrom, setIncorporatedFrom] = useState(daysAgo(30));
+  const [incorporatedTo, setIncorporatedTo] = useState('');
   const [location, setLocation] = useState('');
   const [openCategory, setOpenCategory] = useState(null);
 
@@ -50,7 +51,7 @@ export default function SearchFilters({ country, onCountryChange, onSearch, isLo
   }
 
   function handleSearch() {
-    onSearch({ country, sicCodes: selectedCodes, incorporatedFrom, location });
+    onSearch({ country, sicCodes: selectedCodes, incorporatedFrom, incorporatedTo, location });
   }
 
   return (
@@ -81,17 +82,27 @@ export default function SearchFilters({ country, onCountryChange, onSearch, isLo
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Date filter */}
-          <div className="min-w-0 overflow-hidden">
-            <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wide">
-              {isNZ ? 'Registered After' : 'Incorporated After'}
+          {/* Date range filter */}
+          <div className="min-w-0 overflow-hidden flex flex-col gap-1.5">
+            <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide">
+              {isNZ ? 'Registration Date Range' : 'Incorporation Date Range'}
             </label>
-            <input
-              type="date"
-              value={incorporatedFrom}
-              onChange={(e) => setIncorporatedFrom(e.target.value)}
-              className={`w-full block bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none ${accent.focus}`}
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={incorporatedFrom}
+                onChange={(e) => setIncorporatedFrom(e.target.value)}
+                className={`flex-1 min-w-0 block bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none ${accent.focus}`}
+              />
+              <span className="text-gray-500 text-xs flex-shrink-0">to</span>
+              <input
+                type="date"
+                value={incorporatedTo}
+                onChange={(e) => setIncorporatedTo(e.target.value)}
+                min={incorporatedFrom || undefined}
+                className={`flex-1 min-w-0 block bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none ${accent.focus}`}
+              />
+            </div>
           </div>
 
           {/* Location filter */}

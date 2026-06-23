@@ -35,6 +35,7 @@ export async function searchNZCompanies({
   apiKey,
   sicCodes,
   incorporatedFrom,
+  incorporatedTo,
   location,
   startIndex = 0,
   size = 20,
@@ -49,6 +50,7 @@ export async function searchNZCompanies({
   });
 
   if (incorporatedFrom) params.set('registration-date-start', incorporatedFrom);
+  if (incorporatedTo) params.set('registration-date-end', incorporatedTo);
   if (location && location.trim()) params.set('search-term', location.trim());
   if (sicCodes && sicCodes.length > 0) params.set('classification', sicCodes.join(','));
 

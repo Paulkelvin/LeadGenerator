@@ -20,6 +20,7 @@ export async function searchCompanies({
   apiKey,
   sicCodes,
   incorporatedFrom,
+  incorporatedTo,
   location,
   startIndex = 0,
   size = 20,
@@ -35,6 +36,9 @@ export async function searchCompanies({
   }
   if (incorporatedFrom) {
     params.set('incorporated_from', incorporatedFrom);
+  }
+  if (incorporatedTo) {
+    params.set('incorporated_to', incorporatedTo);
   }
   if (location && location.trim()) {
     params.set('location', location.trim());

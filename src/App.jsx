@@ -142,6 +142,7 @@ export default function App() {
           apiKey: nzApiKey,
           sicCodes: filters.sicCodes,
           incorporatedFrom: filters.incorporatedFrom,
+          incorporatedTo: filters.incorporatedTo,
           location: filters.location,
           startIndex: newStartIndex,
           size: PAGE_SIZE,
@@ -151,6 +152,7 @@ export default function App() {
           apiKey,
           sicCodes: filters.sicCodes,
           incorporatedFrom: filters.incorporatedFrom,
+          incorporatedTo: filters.incorporatedTo,
           location: filters.location,
           startIndex: newStartIndex,
           size: PAGE_SIZE,
@@ -171,6 +173,7 @@ export default function App() {
           location: filters.location || '',
           sicCodes: filters.sicCodes || [],
           incorporatedFrom: filters.incorporatedFrom || '',
+          incorporatedTo: filters.incorporatedTo || '',
           resultCount: data.hits || data.total_results || items.length,
         };
         const newHistory = await addSearchHistoryAsync(entry);
@@ -208,6 +211,7 @@ export default function App() {
       country: entry.country,
       sicCodes: entry.sicCodes,
       incorporatedFrom: entry.incorporatedFrom,
+      incorporatedTo: entry.incorporatedTo || '',
       location: entry.location,
     };
     setCountry(entry.country);
