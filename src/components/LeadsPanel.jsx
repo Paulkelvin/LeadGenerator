@@ -392,8 +392,8 @@ export default function LeadsPanel({ leads, hunterKey, onUpdate, onRemove }) {
                         value={meta.notes || ''}
                         onChange={(e) => handleField(lead.company_number, 'notes', e.target.value)}
                         placeholder="Notes…"
-                        rows={2}
-                        className="w-full min-w-[160px] bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-blue-500 resize-none"
+                        rows={4}
+                        className="w-full min-w-[160px] bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-blue-500 resize-y"
                       />
                     </td>
 
