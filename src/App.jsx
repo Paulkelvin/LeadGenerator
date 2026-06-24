@@ -292,7 +292,7 @@ export default function App() {
   const activeKey = country === 'nz' ? nzApiKey : apiKey;
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col overflow-x-hidden w-full">
+    <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col w-full">
       {/* Sticky top chrome */}
       <div className="sticky top-0 z-30">
         {/* Header */}
@@ -382,7 +382,7 @@ export default function App() {
       </div>
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col pb-6">
+      <main className="flex-1 flex flex-col pb-6 overflow-x-hidden">
         {isDbLoading ? (
           <div className="flex-1 flex items-center justify-center py-24">
             <Loader2 size={28} className="animate-spin text-blue-500" />
