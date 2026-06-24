@@ -293,90 +293,93 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col overflow-x-hidden w-full">
-      {/* Header */}
-      <header className="bg-gray-900 border-b border-gray-700 px-4 py-3 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Building2 size={18} className="text-white" />
+      {/* Sticky top chrome */}
+      <div className="sticky top-0 z-30">
+        {/* Header */}
+        <header className="bg-gray-900 border-b border-gray-700 px-4 py-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Building2 size={18} className="text-white" />
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-white leading-none">Lead Generator</h1>
+                <p className="text-xs text-gray-500 leading-none mt-0.5">
+                  New business registrations
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-base font-bold text-white leading-none">Lead Generator</h1>
-              <p className="text-xs text-gray-500 leading-none mt-0.5">
-                New business registrations
-              </p>
-            </div>
+            {/* Tab nav */}
+            <nav className="flex items-center gap-1">
+              <button
+                onClick={() => setTab('search')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  tab === 'search'
+                    ? 'bg-gray-700 text-white'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                }`}
+              >
+                Search
+                {results.length > 0 && tab !== 'search' && (
+                  <span className="ml-1.5 text-xs bg-gray-600 px-1.5 py-0.5 rounded-full">
+                    {results.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setTab('leads')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                  tab === 'leads'
+                    ? 'bg-gray-700 text-white'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                }`}
+              >
+                <Star size={13} />
+                Leads
+                {leads.length > 0 && (
+                  <span className="text-xs bg-yellow-800/70 text-yellow-300 px-1.5 py-0.5 rounded-full">
+                    {leads.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setTab('history')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                  tab === 'history'
+                    ? 'bg-gray-700 text-white'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                }`}
+              >
+                <History size={13} />
+                History
+                {searchHistory.length > 0 && (
+                  <span className="text-xs bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded-full">
+                    {searchHistory.length}
+                  </span>
+                )}
+              </button>
+            </nav>
           </div>
-          {/* Tab nav */}
-          <nav className="flex items-center gap-1">
-            <button
-              onClick={() => setTab('search')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                tab === 'search'
-                  ? 'bg-gray-700 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
-              }`}
-            >
-              Search
-              {results.length > 0 && tab !== 'search' && (
-                <span className="ml-1.5 text-xs bg-gray-600 px-1.5 py-0.5 rounded-full">
-                  {results.length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setTab('leads')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                tab === 'leads'
-                  ? 'bg-gray-700 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
-              }`}
-            >
-              <Star size={13} />
-              Leads
-              {leads.length > 0 && (
-                <span className="text-xs bg-yellow-800/70 text-yellow-300 px-1.5 py-0.5 rounded-full">
-                  {leads.length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setTab('history')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                tab === 'history'
-                  ? 'bg-gray-700 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
-              }`}
-            >
-              <History size={13} />
-              History
-              {searchHistory.length > 0 && (
-                <span className="text-xs bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded-full">
-                  {searchHistory.length}
-                </span>
-              )}
-            </button>
-          </nav>
-        </div>
-      </header>
+        </header>
 
-      {/* API Key bar */}
-      <SettingsBar
-        apiKey={apiKey}
-        nzApiKey={nzApiKey}
-        hunterKey={hunterKey}
-        onSaveApiKey={handleSaveKey}
-        onSaveNzApiKey={handleSaveNzApiKey}
-        onSaveHunterKey={handleSaveHunterKey}
-      />
+        {/* API Key bar */}
+        <SettingsBar
+          apiKey={apiKey}
+          nzApiKey={nzApiKey}
+          hunterKey={hunterKey}
+          onSaveApiKey={handleSaveKey}
+          onSaveNzApiKey={handleSaveNzApiKey}
+          onSaveHunterKey={handleSaveHunterKey}
+        />
 
-      {/* DB error banner */}
-      {dbError && (
-        <div className="bg-yellow-950/50 border-b border-yellow-700/50 px-4 py-2 text-xs text-yellow-400 flex items-center gap-2">
-          <AlertTriangle size={13} />
-          {dbError}
-        </div>
-      )}
+        {/* DB error banner */}
+        {dbError && (
+          <div className="bg-yellow-950/50 border-b border-yellow-700/50 px-4 py-2 text-xs text-yellow-400 flex items-center gap-2">
+            <AlertTriangle size={13} />
+            {dbError}
+          </div>
+        )}
+      </div>
 
       {/* Main content */}
       <main className="flex-1 flex flex-col pb-6">
