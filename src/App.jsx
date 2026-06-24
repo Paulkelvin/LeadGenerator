@@ -297,20 +297,20 @@ export default function App() {
       <div className="sticky top-0 z-30">
         {/* Header */}
         <header className="bg-gray-900 border-b border-gray-700 px-4 py-3">
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
                 <Building2 size={18} className="text-white" />
               </div>
-              <div>
-                <h1 className="text-base font-bold text-white leading-none">Lead Generator</h1>
-                <p className="text-xs text-gray-500 leading-none mt-0.5">
+              <div className="hidden sm:block min-w-0">
+                <h1 className="text-base font-bold text-white leading-none truncate">Lead Generator</h1>
+                <p className="text-xs text-gray-500 leading-none mt-0.5 truncate">
                   New business registrations
                 </p>
               </div>
             </div>
             {/* Tab nav */}
-            <nav className="flex items-center gap-1">
+            <nav className="flex items-center gap-1 flex-shrink-0">
               <button
                 onClick={() => setTab('search')}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
