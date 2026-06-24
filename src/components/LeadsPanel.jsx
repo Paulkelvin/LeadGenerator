@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, Trash2, ExternalLink, Copy, Check, Zap, Loader2 } from 'lucide-react';
+import { Download, Trash2, Copy, Check, Zap, Loader2 } from 'lucide-react';
 import Papa from 'papaparse';
 import { SIC_CODE_MAP } from '../data/sicCodes';
 import { ANZSIC_CODE_MAP } from '../data/anzsicCodes';
@@ -40,6 +40,12 @@ function formatDate(str) {
 function formatContactedDate(iso) {
   if (!iso) return '';
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function cleanName(name) {
+  return name
+    .replace(/\b(limited|ltd\.?|llp\.?|plc\.?|llc\.?|cic\.?|cio\.?|inc\.?|corp\.?|co\.?)$/i, '')
+    .trim();
 }
 
 function CopyBtn({ text }) {
@@ -222,7 +228,10 @@ export default function LeadsPanel({ leads, hunterKey, onUpdate, onRemove }) {
                 const status = meta.status || 'new';
                 const cfg = STATUS_CONFIG[status];
                 const dot = contactDot(meta);
-                const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(lead.company_name + ' website')}`;
+                const q = encodeURIComponent(cleanName(lead.company_name));
+                const googleUrl    = `https://www.google.com/search?q=${q}`;
+                const instagramUrl = `https://www.instagram.com/explore/search/keyword/?q=${q}`;
+                const facebookUrl  = `https://www.facebook.com/search/top?q=${q}`;
                 const sics = lead.sic_codes || [];
                 const enrich = enrichMap[lead.company_number] || { status: 'idle', emails: [], error: null };
                 const canEnrich = hunterKey && meta.website;
@@ -245,11 +254,19 @@ export default function LeadsPanel({ leads, hunterKey, onUpdate, onRemove }) {
                             {lead.company_number}
                           </div>
                         </div>
-                        <div className="flex items-center gap-0.5 mt-0.5 flex-shrink-0">
+                        <div className="flex flex-col gap-0.5 mt-0.5 flex-shrink-0">
                           <CopyBtn text={lead.company_name} />
-                          <a href={googleUrl} target="_blank" rel="noopener noreferrer" className="p-1 text-gray-600 hover:text-blue-400 transition-colors" title="Google search">
-                            <ExternalLink size={13} />
-                          </a>
+                          <div className="flex items-center gap-1">
+                            <a href={googleUrl} target="_blank" rel="noopener noreferrer"
+                               className="text-[10px] px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-300 hover:bg-blue-800/60 border border-blue-800/40 transition-colors"
+                               title="Search Google">G</a>
+                            <a href={instagramUrl} target="_blank" rel="noopener noreferrer"
+                               className="text-[10px] px-1.5 py-0.5 rounded bg-pink-900/40 text-pink-300 hover:bg-pink-800/60 border border-pink-800/40 transition-colors"
+                               title="Search Instagram">IG</a>
+                            <a href={facebookUrl} target="_blank" rel="noopener noreferrer"
+                               className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-900/40 text-indigo-300 hover:bg-indigo-800/60 border border-indigo-800/40 transition-colors"
+                               title="Search Facebook">FB</a>
+                          </div>
                         </div>
                       </div>
                     </td>
