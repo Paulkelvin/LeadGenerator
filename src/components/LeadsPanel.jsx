@@ -248,15 +248,15 @@ export default function LeadsPanel({ leads, hunterKey, onUpdate, onRemove }) {
                           title={dot.title}
                         />
                         <div className="min-w-0">
-                          <div className="font-medium text-white leading-snug">{lead.company_name}</div>
+                          <div className="flex items-start gap-1">
+                            <div className="font-medium text-white leading-snug">{lead.company_name}</div>
+                            <CopyBtn text={lead.company_name} />
+                          </div>
                           <div className="text-xs font-mono text-gray-500 mt-0.5">
                             {(lead._country || 'uk') === 'nz' ? '🇳🇿 ' : '🇬🇧 '}
                             {lead.company_number}
                           </div>
-                        </div>
-                        <div className="flex flex-col gap-0.5 mt-0.5 flex-shrink-0">
-                          <CopyBtn text={lead.company_name} />
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 mt-1.5">
                             <a href={googleUrl} target="_blank" rel="noopener noreferrer"
                                className="text-[10px] px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-300 hover:bg-blue-800/60 border border-blue-800/40 transition-colors"
                                title="Search Google">G</a>
@@ -267,10 +267,6 @@ export default function LeadsPanel({ leads, hunterKey, onUpdate, onRemove }) {
                                className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-900/40 text-indigo-300 hover:bg-indigo-800/60 border border-indigo-800/40 transition-colors"
                                title="Search Facebook">FB</a>
                           </div>
-                        </div>
-                      </div>
-                    </td>
-
                     {/* Date */}
                     <td className="px-3 py-3 text-gray-400 whitespace-nowrap text-xs">
                       {formatDate(lead.date_of_creation)}

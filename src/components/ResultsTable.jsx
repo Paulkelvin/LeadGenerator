@@ -15,6 +15,12 @@ function formatAddress(addr) {
   ].filter(Boolean).join(', ') || '—';
 }
 
+function cleanName(name) {
+  return name
+    .replace(/\b(limited|ltd\.?|llp\.?|plc\.?|llc\.?|cic\.?|cio\.?|inc\.?|corp\.?|co\.?)$/i, '')
+    .trim();
+}
+
 function formatDate(str) {
   if (!str) return '—';
   const [y, m, d] = str.split('-');
@@ -183,7 +189,7 @@ export default function ResultsTable({ results, leads, onMarkLead, onUnmarkLead,
             <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Address</th>
             <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">SIC</th>
             <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Status</th>
-            <th className="text-center px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Web</th>
+            <th className="text-left px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Search</th>
             <th className="text-center px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Lead</th>
           </tr>
         </thead>
@@ -191,7 +197,10 @@ export default function ResultsTable({ results, leads, onMarkLead, onUnmarkLead,
           {results.map((company) => {
             const isLead = leadNumbers.has(company.company_number);
             const isExpanded = expandedNum === company.company_number;
-            const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(company.company_name + ' website')}`;
+            const q = encodeURIComponent(cleanName(company.company_name));
+            const googleUrl    = `https://www.google.com/search?q=${q}`;
+            const instagramUrl = `https://www.instagram.com/explore/search/keyword/?q=${q}`;
+            const facebookUrl  = `https://www.facebook.com/search/top?q=${q}`;
             const sics = company.sic_codes || [];
 
             return (
@@ -263,11 +272,19 @@ export default function ResultsTable({ results, leads, onMarkLead, onUnmarkLead,
                     </span>
                   </td>
 
-                  {/* Web search */}
-                  <td className="px-4 py-3 text-center">
-                    <a href={googleUrl} target="_blank" rel="noopener noreferrer" title="Search for website" className="inline-flex items-center justify-center p-1.5 text-gray-500 hover:text-blue-400 transition-colors">
-                      <ExternalLink size={15} />
-                    </a>
+                  {/* Search links */}
+                  <td className="px-3 py-3">
+                    <div className="flex items-center gap-1">
+                      <a href={googleUrl} target="_blank" rel="noopener noreferrer"
+                         className="text-[10px] px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-300 hover:bg-blue-800/60 border border-blue-800/40 transition-colors"
+                         title="Search Google">G</a>
+                      <a href={instagramUrl} target="_blank" rel="noopener noreferrer"
+                         className="text-[10px] px-1.5 py-0.5 rounded bg-pink-900/40 text-pink-300 hover:bg-pink-800/60 border border-pink-800/40 transition-colors"
+                         title="Search Instagram">IG</a>
+                      <a href={facebookUrl} target="_blank" rel="noopener noreferrer"
+                         className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-900/40 text-indigo-300 hover:bg-indigo-800/60 border border-indigo-800/40 transition-colors"
+                         title="Search Facebook">FB</a>
+                    </div>
                   </td>
 
                   {/* Star */}
