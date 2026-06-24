@@ -267,6 +267,10 @@ export default function LeadsPanel({ leads, hunterKey, onUpdate, onRemove }) {
                                className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-900/40 text-indigo-300 hover:bg-indigo-800/60 border border-indigo-800/40 transition-colors"
                                title="Search Facebook">FB</a>
                           </div>
+                        </div>
+                      </div>
+                    </td>
+
                     {/* Date */}
                     <td className="px-3 py-3 text-gray-400 whitespace-nowrap text-xs">
                       {formatDate(lead.date_of_creation)}
