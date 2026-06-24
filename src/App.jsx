@@ -175,6 +175,7 @@ export default function App() {
           incorporatedFrom: filters.incorporatedFrom || '',
           incorporatedTo: filters.incorporatedTo || '',
           resultCount: data.hits || data.total_results || items.length,
+          items,
         };
         const newHistory = await addSearchHistoryAsync(entry);
         setSearchHistory(newHistory);
@@ -204,6 +205,21 @@ export default function App() {
 
   function handlePage(newStartIndex) {
     if (lastFilters) runSearch(lastFilters, newStartIndex);
+  }
+
+  function handleLoadResults(entry) {
+    setResults(entry.items || []);
+    setTotal(entry.resultCount || 0);
+    setStartIndex(0);
+    setLastFilters({
+      country: entry.country,
+      sicCodes: entry.sicCodes,
+      incorporatedFrom: entry.incorporatedFrom,
+      incorporatedTo: entry.incorporatedTo || '',
+      location: entry.location,
+    });
+    setCountry(entry.country);
+    setTab('search');
   }
 
   function handleRerunSearch(entry) {
@@ -492,6 +508,7 @@ export default function App() {
                   <HistoryPanel
                     history={searchHistory}
                     onRerun={handleRerunSearch}
+                    onLoad={handleLoadResults}
                     onClear={handleClearHistory}
                   />
                 </div>

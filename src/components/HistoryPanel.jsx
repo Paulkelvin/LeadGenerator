@@ -1,4 +1,4 @@
-import { RotateCcw, Clock, Trash2 } from 'lucide-react';
+import { RotateCcw, Clock, Trash2, DatabaseZap } from 'lucide-react';
 import { SIC_CODE_MAP } from '../data/sicCodes';
 import { ANZSIC_CODE_MAP } from '../data/anzsicCodes';
 
@@ -31,7 +31,7 @@ function IndustriesSummary({ codes, country }) {
   );
 }
 
-export default function HistoryPanel({ history, onRerun, onClear }) {
+export default function HistoryPanel({ history, onRerun, onLoad, onClear }) {
   if (history.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center px-4">
@@ -109,14 +109,27 @@ export default function HistoryPanel({ history, onRerun, onClear }) {
                     {(entry.resultCount || 0).toLocaleString()}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-center">
-                  <button
-                    onClick={() => onRerun(entry)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg transition-colors"
-                  >
-                    <RotateCcw size={12} />
-                    Re-run
-                  </button>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-1.5">
+                    {entry.items?.length > 0 && (
+                      <button
+                        onClick={() => onLoad(entry)}
+                        title="Restore cached results instantly"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-300 hover:text-green-100 bg-green-900/30 hover:bg-green-900/50 border border-green-800/50 rounded-lg transition-colors whitespace-nowrap"
+                      >
+                        <DatabaseZap size={12} />
+                        Load
+                      </button>
+                    )}
+                    <button
+                      onClick={() => onRerun(entry)}
+                      title="Re-run search against API"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg transition-colors whitespace-nowrap"
+                    >
+                      <RotateCcw size={12} />
+                      Re-run
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
