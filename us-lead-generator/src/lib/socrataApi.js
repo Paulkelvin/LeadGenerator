@@ -6,6 +6,10 @@ function daysAgo(n) {
   return d.toISOString().split('T')[0];
 }
 
+const isLocal =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
 export function buildQuery({ stateCode, dateFrom, dateTo, entityType, keyword, city, offset = 0, limit = 50, endpointOverride }) {
   const cfg = SOCRATA_STATES[stateCode];
   const endpoint = endpointOverride || cfg.endpoint;
@@ -23,14 +27,22 @@ export function buildQuery({ stateCode, dateFrom, dateTo, entityType, keyword, c
     clauses.push(`upper(${cfg.cityField}) like upper('%${city.trim().replace(/'/g, "''")}%')`);
   }
 
-  const params = new URLSearchParams({
+  const queryParams = new URLSearchParams({
     '$limit': String(limit),
     '$offset': String(offset),
     '$order': `${cfg.dateField} DESC`,
   });
-  if (clauses.length) params.set('$where', clauses.join(' AND '));
+  if (clauses.length) queryParams.set('$where', clauses.join(' AND '));
 
-  return `${endpoint}?${params}`;
+  if (isLocal) {
+    return `${endpoint}?${queryParams}`;
+  }
+
+  const proxyParams = new URLSearchParams({ endpoint });
+  for (const [k, v] of queryParams.entries()) {
+    proxyParams.set(k, v);
+  }
+  return `/api/socrata-proxy?${proxyParams}`;
 }
 
 export function normalizeRow(row, stateCode) {

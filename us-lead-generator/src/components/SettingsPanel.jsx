@@ -27,8 +27,11 @@ export default function SettingsPanel({ filedApiKey, onSaveFiledKey }) {
     setTestResults((prev) => ({ ...prev, [stateCode]: 'loading' }));
     const cfg = SOCRATA_STATES[stateCode];
     const endpoint = overrides[stateCode] || cfg.endpoint;
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     try {
-      const url = `${endpoint}?$limit=1`;
+      const url = isLocal
+        ? `${endpoint}?$limit=1`
+        : `/api/socrata-proxy?endpoint=${encodeURIComponent(endpoint)}&$limit=1`;
       const res = await fetch(url, { headers: { Accept: 'application/json' } });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
