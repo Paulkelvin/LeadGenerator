@@ -85,26 +85,6 @@ export const SOCRATA_STATES = {
     nameField: 'current_entity_name',
     cityField: 'dos_process_city',
   },
-  WA: {
-    name: 'Washington',
-    emoji: '🌧️',
-    color: 'teal',
-    endpoint: 'https://data.wa.gov/resource/f9jk-mm39.json',
-    fields: {
-      name: 'entity_name',
-      type: 'entity_type',
-      date: 'formation_date',
-      status: 'status',
-      address: 'address',
-      city: 'city',
-      stateField: 'state_of_incorporation',
-      zip: 'zip',
-      agent: 'agent_name',
-    },
-    dateField: 'formation_date',
-    nameField: 'entity_name',
-    cityField: 'city',
-  },
 };
 
 export const FILED_STATES = [

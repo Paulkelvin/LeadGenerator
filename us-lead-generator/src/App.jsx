@@ -3,6 +3,7 @@ import { Flag } from 'lucide-react';
 import SearchFilters from './components/SearchFilters';
 import ResultsTable from './components/ResultsTable';
 import LeadsPanel from './components/LeadsPanel';
+import HistoryPanel from './components/HistoryPanel';
 import SettingsPanel from './components/SettingsPanel';
 import { searchState } from './lib/socrataApi';
 import { searchFiledState } from './lib/filedApi';
@@ -10,55 +11,58 @@ import { SOCRATA_STATES, FILED_STATES } from './data/states';
 import {
   getFiledKey,
   getLeads,
+  getSearchHistory,
   getDatasetOverrides,
   saveLeadsAsync,
+  saveHistoryAsync,
   saveSettingsAsync,
 } from './lib/storage';
 import { supabaseEnabled, fetchAll } from './lib/supabase';
 
 const FILED_CODES = new Set(FILED_STATES.map((s) => s.code));
-const PAGE_SIZE = 50;
+const FETCH_LIMIT = 200;
 
 export default function App() {
   const [tab, setTab] = useState('search');
   const [filedApiKey, setFiledApiKey] = useState('');
   const [results, setResults] = useState([]);
   const [leads, setLeads] = useState([]);
+  const [searchHistory, setSearchHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [stateErrors, setStateErrors] = useState({});
   const [loadingStates, setLoadingStates] = useState([]);
-  const [hasMore, setHasMore] = useState(false);
   const [dbReady, setDbReady] = useState(false);
 
   const lastFiltersRef = useRef(null);
-  const offsetsRef = useRef({});
 
-  // Bootstrap: load from Supabase (with 5s timeout fallback) or localStorage
   useEffect(() => {
     let cancelled = false;
     async function boot() {
       let key = getFiledKey();
       let savedLeads = getLeads();
+      let savedHistory = getSearchHistory();
 
       if (supabaseEnabled) {
         const timer = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 5000));
         try {
-          const { settings, leads: dbLeads } = await Promise.race([
+          const { settings, leads: dbLeads, history: dbHistory } = await Promise.race([
             fetchAll(),
             timer,
           ]);
           if (!cancelled) {
             if (settings?.filed_api_key) key = settings.filed_api_key;
             if (dbLeads?.length) savedLeads = dbLeads;
+            if (dbHistory?.length) savedHistory = dbHistory;
           }
         } catch {
-          // fallback to localStorage — already set above
+          // fallback to localStorage
         }
       }
 
       if (!cancelled) {
         setFiledApiKey(key);
         setLeads(savedLeads);
+        setSearchHistory(savedHistory);
         setDbReady(true);
       }
     }
@@ -68,10 +72,8 @@ export default function App() {
 
   async function handleSearch(filters) {
     lastFiltersRef.current = filters;
-    offsetsRef.current = {};
     setResults([]);
     setStateErrors({});
-    setHasMore(false);
     setIsLoading(true);
 
     const { selectedStates, ...rest } = filters;
@@ -103,10 +105,8 @@ export default function App() {
               keyword: rest.keyword,
               city: rest.city,
               offset: 0,
-              limit: PAGE_SIZE,
+              limit: FETCH_LIMIT,
             });
-            offsetsRef.current[code] = PAGE_SIZE;
-            if (rows.length === PAGE_SIZE) setHasMore(true);
           }
           allRows.push(...rows);
         } catch (err) {
@@ -117,53 +117,51 @@ export default function App() {
       })
     );
 
-    setResults(allRows.sort((a, b) => (b.formationDate || '').localeCompare(a.formationDate || '')));
+    const sorted = allRows.sort((a, b) => (b.formationDate || '').localeCompare(a.formationDate || ''));
+    setResults(sorted);
     setStateErrors(errors);
     setIsLoading(false);
+
+    const entry = {
+      id: Date.now().toString(),
+      timestamp: new Date().toISOString(),
+      selectedStates,
+      dateFrom: rest.dateFrom,
+      dateTo: rest.dateTo,
+      entityType: rest.entityType,
+      keyword: rest.keyword,
+      city: rest.city,
+      resultCount: sorted.length,
+      items: sorted,
+    };
+    const newHistory = [entry, ...searchHistory].slice(0, 50);
+    setSearchHistory(newHistory);
+    saveHistoryAsync(newHistory);
   }
 
-  async function handleLoadMore() {
-    if (!lastFiltersRef.current) return;
-    setIsLoading(true);
+  function handleHistoryLoad(entry) {
+    if (entry.items?.length) {
+      setResults(entry.items);
+      setStateErrors({});
+      setTab('search');
+    }
+  }
 
-    const { selectedStates, ...rest } = lastFiltersRef.current;
-    const datasetOverrides = getDatasetOverrides();
-    const socrataStates = selectedStates.filter((c) => !FILED_CODES.has(c));
-
-    const newRows = [];
-    let anyMore = false;
-
-    await Promise.all(
-      socrataStates.map(async (code) => {
-        const offset = offsetsRef.current[code] || 0;
-        try {
-          const rows = await searchState({
-            stateCode: code,
-            endpointOverride: datasetOverrides[code],
-            dateFrom: rest.dateFrom,
-            dateTo: rest.dateTo,
-            entityType: rest.entityType,
-            keyword: rest.keyword,
-            city: rest.city,
-            offset,
-            limit: PAGE_SIZE,
-          });
-          offsetsRef.current[code] = offset + PAGE_SIZE;
-          if (rows.length === PAGE_SIZE) anyMore = true;
-          newRows.push(...rows);
-        } catch {
-          // silently skip on load-more errors
-        }
-      })
-    );
-
-    setResults((prev) => {
-      const existingIds = new Set(prev.map((r) => r._id));
-      const fresh = newRows.filter((r) => !existingIds.has(r._id));
-      return [...prev, ...fresh].sort((a, b) => (b.formationDate || '').localeCompare(a.formationDate || ''));
+  function handleHistoryRerun(entry) {
+    setTab('search');
+    handleSearch({
+      selectedStates: entry.selectedStates,
+      dateFrom: entry.dateFrom,
+      dateTo: entry.dateTo,
+      entityType: entry.entityType,
+      keyword: entry.keyword,
+      city: entry.city,
     });
-    setHasMore(anyMore);
-    setIsLoading(false);
+  }
+
+  function handleHistoryClear() {
+    setSearchHistory([]);
+    saveHistoryAsync([]);
   }
 
   function handleAddLead(row) {
@@ -188,12 +186,12 @@ export default function App() {
   const TABS = [
     { id: 'search', label: 'Search' },
     { id: 'leads',  label: `Leads${leads.length ? ` (${leads.length})` : ''}` },
+    { id: 'history', label: `History${searchHistory.length ? ` (${searchHistory.length})` : ''}` },
     { id: 'settings', label: 'Settings' },
   ];
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col w-full">
-      {/* Sticky header */}
       <div className="sticky top-0 z-30">
         <header className="bg-gray-900 border-b border-gray-700 px-4 py-3">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
@@ -225,7 +223,6 @@ export default function App() {
         </header>
       </div>
 
-      {/* Main content */}
       <main className="flex-1 flex flex-col pb-6 overflow-x-hidden">
         {tab === 'search' && (
           <>
@@ -241,8 +238,6 @@ export default function App() {
               loadingStates={loadingStates}
               onAddLead={handleAddLead}
               savedLeadIds={savedLeadIds}
-              onLoadMore={handleLoadMore}
-              hasMore={hasMore}
             />
           </>
         )}
@@ -251,6 +246,15 @@ export default function App() {
           <LeadsPanel
             leads={leads}
             onLeadsChange={handleLeadsChange}
+          />
+        )}
+
+        {tab === 'history' && (
+          <HistoryPanel
+            history={searchHistory}
+            onLoad={handleHistoryLoad}
+            onRerun={handleHistoryRerun}
+            onClear={handleHistoryClear}
           />
         )}
 

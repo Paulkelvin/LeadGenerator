@@ -9,7 +9,6 @@ export default async function handler(req, res) {
     'data.oregon.gov',
     'data.ct.gov',
     'data.ny.gov',
-    'data.wa.gov',
   ];
   let url;
   try {

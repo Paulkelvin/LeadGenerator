@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Star, Copy, Check, ChevronDown } from 'lucide-react';
+import { Star, Copy, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { STATE_BADGE_CLASSES, SOCRATA_STATES, FILED_STATES } from '../data/states';
 
 const ALL_STATES = {
   ...SOCRATA_STATES,
   ...Object.fromEntries(FILED_STATES.map((s) => [s.code, s])),
 };
+
+const PER_PAGE = 25;
 
 function cleanName(name) {
   return name
@@ -44,7 +46,79 @@ function StateBadge({ stateCode }) {
   );
 }
 
-export default function ResultsTable({ results, stateErrors, isLoading, loadingStates, onAddLead, savedLeadIds, onLoadMore, hasMore }) {
+function Pagination({ page, totalPages, onPageChange, totalResults }) {
+  const pages = [];
+  const maxVisible = 5;
+  let start = Math.max(1, page - Math.floor(maxVisible / 2));
+  let end = Math.min(totalPages, start + maxVisible - 1);
+  if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1);
+
+  if (start > 1) {
+    pages.push(1);
+    if (start > 2) pages.push('...');
+  }
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (end < totalPages) {
+    if (end < totalPages - 1) pages.push('...');
+    pages.push(totalPages);
+  }
+
+  return (
+    <div className="px-4 py-3 flex items-center justify-between">
+      <p className="text-sm text-gray-400">
+        <span className="text-white font-medium">{totalResults}</span> results
+        <span className="text-gray-600 ml-2">·</span>
+        <span className="ml-2">Page {page} of {totalPages}</span>
+      </p>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onPageChange(page - 1)}
+          disabled={page <= 1}
+          className="p-1.5 rounded text-gray-400 hover:text-white hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronLeft size={16} />
+        </button>
+        {pages.map((p, i) =>
+          p === '...' ? (
+            <span key={`dots-${i}`} className="px-1 text-gray-600 text-sm">…</span>
+          ) : (
+            <button
+              key={p}
+              onClick={() => onPageChange(p)}
+              className={`min-w-[32px] h-8 rounded text-sm font-medium transition-colors ${
+                p === page
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              {p}
+            </button>
+          )
+        )}
+        <button
+          onClick={() => onPageChange(page + 1)}
+          disabled={page >= totalPages}
+          className="p-1.5 rounded text-gray-400 hover:text-white hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronRight size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function ResultsTable({ results, stateErrors, isLoading, loadingStates, onAddLead, savedLeadIds }) {
+  const [page, setPage] = useState(1);
+
+  const totalPages = Math.max(1, Math.ceil(results.length / PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const pageResults = results.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+
+  function handlePageChange(p) {
+    setPage(p);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   if (!isLoading && results.length === 0 && Object.keys(stateErrors || {}).length === 0) {
     return null;
   }
@@ -73,11 +147,9 @@ export default function ResultsTable({ results, stateErrors, isLoading, loadingS
         </div>
       ) : (
         <>
-          <div className="px-4 py-3 flex items-center justify-between">
-            <p className="text-sm text-gray-400">
-              <span className="text-white font-medium">{results.length}</span> results
-            </p>
-          </div>
+          {/* Top pagination */}
+          <Pagination page={currentPage} totalPages={totalPages} onPageChange={handlePageChange} totalResults={results.length} />
+
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
@@ -93,7 +165,7 @@ export default function ResultsTable({ results, stateErrors, isLoading, loadingS
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800/60">
-              {results.map((row) => {
+              {pageResults.map((row) => {
                 const isLead = savedLeadIds?.has(row._id);
                 const q = encodeURIComponent(cleanName(row.companyName));
                 const googleUrl = `https://www.google.com/search?q=${q}`;
@@ -193,22 +265,8 @@ export default function ResultsTable({ results, stateErrors, isLoading, loadingS
             </tbody>
           </table>
 
-          {hasMore && (
-            <div className="flex justify-center py-6">
-              <button
-                onClick={onLoadMore}
-                disabled={isLoading}
-                className="flex items-center gap-2 px-5 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-gray-300 rounded-lg text-sm font-medium transition-colors border border-gray-700"
-              >
-                {isLoading ? (
-                  <div className="w-4 h-4 border-2 border-gray-500 border-t-gray-300 rounded-full animate-spin" />
-                ) : (
-                  <ChevronDown size={16} />
-                )}
-                Load more
-              </button>
-            </div>
-          )}
+          {/* Bottom pagination */}
+          <Pagination page={currentPage} totalPages={totalPages} onPageChange={handlePageChange} totalResults={results.length} />
         </>
       )}
     </div>
