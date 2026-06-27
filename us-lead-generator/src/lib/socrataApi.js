@@ -62,10 +62,25 @@ export function normalizeRow(row, stateCode) {
     state: stateCode,
     zip: row[f.zip] || '',
     agentName,
+    email: f.email ? row[f.email] || '' : '',
+    naicsCode: f.naics ? row[f.naics] || '' : '',
+    county: f.county ? row[f.county] || '' : '',
+    jurisdiction: f.jurisdiction ? row[f.jurisdiction] || '' : '',
+    ceo: f.ceo ? row[f.ceo] || '' : '',
     _source: 'socrata',
     _stateCode: stateCode,
     _id: `${stateCode}-${row[f.name]}-${rawDate}`,
   };
+}
+
+function deduplicateByName(rows) {
+  const seen = new Map();
+  for (const row of rows) {
+    if (!seen.has(row.companyName)) {
+      seen.set(row.companyName, row);
+    }
+  }
+  return [...seen.values()];
 }
 
 export async function searchState({ stateCode, endpointOverride, ...filters }) {
@@ -77,5 +92,6 @@ export async function searchState({ stateCode, endpointOverride, ...filters }) {
   }
   const data = await res.json();
   if (!Array.isArray(data)) throw new Error(`${SOCRATA_STATES[stateCode].name}: unexpected response`);
-  return data.map((r) => normalizeRow(r, stateCode));
+  const rows = data.map((r) => normalizeRow(r, stateCode));
+  return deduplicateByName(rows);
 }

@@ -106,14 +106,32 @@ export default function ResultsTable({ results, stateErrors, isLoading, loadingS
                     <td className="px-4 py-3">
                       <StateBadge stateCode={row.state} />
                     </td>
-                    <td className="px-3 py-3 max-w-[200px]">
-                      <div className="flex items-start gap-1">
-                        <div className="min-w-0">
-                          <div className="font-medium text-white leading-snug truncate flex items-center gap-1">
-                            <span className="truncate">{row.companyName}</span>
-                            <CopyBtn text={row.companyName} />
-                          </div>
+                    <td className="px-3 py-3 max-w-[220px]">
+                      <div className="min-w-0">
+                        <div className="font-medium text-white leading-snug truncate flex items-center gap-1">
+                          <span className="truncate">{row.companyName}</span>
+                          <CopyBtn text={row.companyName} />
                         </div>
+                        {(row.email || row.naicsCode || row.county || row.ceo) && (
+                          <div className="mt-1 space-y-0.5">
+                            {row.email && (
+                              <div className="flex items-center gap-1 text-xs text-emerald-400 truncate">
+                                <span className="text-gray-600">@</span>
+                                <a href={`mailto:${row.email}`} className="hover:underline truncate" onClick={(e) => e.stopPropagation()}>{row.email}</a>
+                                <CopyBtn text={row.email} />
+                              </div>
+                            )}
+                            {row.ceo && (
+                              <div className="text-xs text-gray-500 truncate">CEO: {row.ceo}</div>
+                            )}
+                            {row.naicsCode && (
+                              <div className="text-xs text-gray-600 truncate">NAICS: {row.naicsCode}</div>
+                            )}
+                            {row.county && (
+                              <div className="text-xs text-gray-600 truncate">{row.county} County</div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="px-3 py-3 hidden md:table-cell text-gray-400 text-xs max-w-[120px] truncate">

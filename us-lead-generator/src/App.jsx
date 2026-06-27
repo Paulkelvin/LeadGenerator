@@ -168,7 +168,7 @@ export default function App() {
 
   function handleAddLead(row) {
     if (leads.some((l) => l._id === row._id)) return;
-    const next = [...leads, { ...row, status: 'new', email: '', phone: '', website: '', notes: '' }];
+    const next = [...leads, { ...row, status: 'new', contactEmail: row.email || '', phone: '', website: '', notes: '' }];
     setLeads(next);
     saveLeadsAsync(next);
   }

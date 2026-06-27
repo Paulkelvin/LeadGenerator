@@ -119,8 +119,8 @@ function LeadRow({ lead, onChange, onRemove }) {
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Email</label>
                 <input
                   type="email"
-                  value={lead.email || ''}
-                  onChange={(e) => onChange({ ...lead, email: e.target.value })}
+                  value={lead.contactEmail || lead.email || ''}
+                  onChange={(e) => onChange({ ...lead, contactEmail: e.target.value })}
                   placeholder="contact@example.com"
                   className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
                 />
@@ -155,10 +155,20 @@ function LeadRow({ lead, onChange, onRemove }) {
                   className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 resize-y"
                 />
               </div>
-              <div className="sm:col-span-2 lg:col-span-3 text-xs text-gray-600">
-                {lead.address && <span className="mr-4">Address: {lead.address}</span>}
-                {lead.zip && <span className="mr-4">ZIP: {lead.zip}</span>}
-                {lead.agentName && <span>Agent: {lead.agentName}</span>}
+              <div className="sm:col-span-2 lg:col-span-3 text-xs text-gray-600 space-y-0.5">
+                <div>
+                  {lead.address && <span className="mr-4">Address: {lead.address}</span>}
+                  {lead.zip && <span className="mr-4">ZIP: {lead.zip}</span>}
+                  {lead.agentName && <span>Agent: {lead.agentName}</span>}
+                </div>
+                {(lead.naicsCode || lead.county || lead.ceo || lead.jurisdiction) && (
+                  <div>
+                    {lead.naicsCode && <span className="mr-4">NAICS: {lead.naicsCode}</span>}
+                    {lead.county && <span className="mr-4">{lead.county} County</span>}
+                    {lead.ceo && <span className="mr-4">CEO: {lead.ceo}</span>}
+                    {lead.jurisdiction && <span>Jurisdiction: {lead.jurisdiction}</span>}
+                  </div>
+                )}
               </div>
             </div>
           </td>
@@ -186,8 +196,13 @@ export default function LeadsPanel({ leads, onLeadsChange }) {
       Status: l.status || 'new',
       City: l.city,
       ZIP: l.zip,
+      County: l.county || '',
       Agent: l.agentName,
-      Email: l.email || '',
+      CEO: l.ceo || '',
+      'Business Email': l.email || '',
+      'NAICS Code': l.naicsCode || '',
+      Jurisdiction: l.jurisdiction || '',
+      Email: l.contactEmail || '',
       Phone: l.phone || '',
       Website: l.website || '',
       Notes: l.notes || '',

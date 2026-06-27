@@ -8,6 +8,8 @@ export default async function handler(req, res) {
     'data.colorado.gov',
     'data.oregon.gov',
     'data.ct.gov',
+    'data.ny.gov',
+    'data.wa.gov',
   ];
   let url;
   try {
