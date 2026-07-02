@@ -10,7 +10,7 @@ const isLocal =
   typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-export function buildQuery({ stateCode, dateFrom, dateTo, entityType, keyword, city, offset = 0, limit = 50, endpointOverride }) {
+export function buildQuery({ stateCode, dateFrom, dateTo, entityType, keyword, industries, city, offset = 0, limit = 50, endpointOverride }) {
   const cfg = SOCRATA_STATES[stateCode];
   const endpoint = endpointOverride || cfg.endpoint;
   const clauses = [];
@@ -20,9 +20,20 @@ export function buildQuery({ stateCode, dateFrom, dateTo, entityType, keyword, c
   if (entityType && entityType !== 'all' && cfg.fields.type) {
     clauses.push(`${cfg.fields.type} = '${entityType}'`);
   }
-  if (keyword && keyword.trim()) {
-    clauses.push(`upper(${cfg.nameField}) like upper('%${keyword.trim().replace(/'/g, "''")}%')`);
+
+  const nameTerms = [];
+  if (industries && industries.length > 0) {
+    industries.forEach((term) => {
+      nameTerms.push(`upper(${cfg.nameField}) like upper('%${term.replace(/'/g, "''")}%')`);
+    });
   }
+  if (keyword && keyword.trim()) {
+    nameTerms.push(`upper(${cfg.nameField}) like upper('%${keyword.trim().replace(/'/g, "''")}%')`);
+  }
+  if (nameTerms.length > 0) {
+    clauses.push(`(${nameTerms.join(' OR ')})`);
+  }
+
   if (city && city.trim() && cfg.cityField) {
     clauses.push(`upper(${cfg.cityField}) like upper('%${city.trim().replace(/'/g, "''")}%')`);
   }

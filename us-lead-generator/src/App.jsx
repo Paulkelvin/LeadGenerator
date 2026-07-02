@@ -87,11 +87,15 @@ export default function App() {
       selectedStates.map(async (code) => {
         try {
           let rows;
+          const filedKeyword = [
+            ...(rest.industries || []),
+            ...(rest.keyword ? [rest.keyword] : []),
+          ].join(' ');
           if (FILED_CODES.has(code)) {
             rows = await searchFiledState({
               stateCode: code,
               apiKey: filedApiKey,
-              keyword: rest.keyword,
+              keyword: filedKeyword,
               dateFrom: rest.dateFrom,
               page: 1,
             });
@@ -103,6 +107,7 @@ export default function App() {
               dateTo: rest.dateTo,
               entityType: rest.entityType,
               keyword: rest.keyword,
+              industries: rest.industries,
               city: rest.city,
               offset: 0,
               limit: FETCH_LIMIT,
@@ -130,6 +135,7 @@ export default function App() {
       dateTo: rest.dateTo,
       entityType: rest.entityType,
       keyword: rest.keyword,
+      industries: rest.industries,
       city: rest.city,
       resultCount: sorted.length,
       items: sorted,
@@ -155,6 +161,7 @@ export default function App() {
       dateTo: entry.dateTo,
       entityType: entry.entityType,
       keyword: entry.keyword,
+      industries: entry.industries || [],
       city: entry.city,
     });
   }

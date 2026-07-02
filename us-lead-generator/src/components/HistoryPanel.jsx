@@ -67,7 +67,7 @@ export default function HistoryPanel({ history, onRerun, onLoad, onClear }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-700 bg-gray-800/50">
-              {['Date & Time', 'States', 'Keyword', 'Date Range', 'Type', 'City', 'Results', ''].map((h) => (
+              {['Date & Time', 'States', 'Industries / Keyword', 'Date Range', 'Type', 'City', 'Results', ''].map((h) => (
                 <th
                   key={h}
                   className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide whitespace-nowrap"
@@ -86,8 +86,17 @@ export default function HistoryPanel({ history, onRerun, onLoad, onClear }) {
                 <td className="px-4 py-3">
                   <StatesList codes={entry.selectedStates} />
                 </td>
-                <td className="px-4 py-3 text-gray-400 text-xs">
-                  {entry.keyword || <span className="text-gray-600">—</span>}
+                <td className="px-4 py-3 text-gray-400 text-xs max-w-[180px]">
+                  {entry.industries?.length > 0 ? (
+                    <span className="text-gray-300">
+                      {entry.industries.slice(0, 3).join(', ')}
+                      {entry.industries.length > 3 && <span className="text-gray-600"> +{entry.industries.length - 3}</span>}
+                    </span>
+                  ) : entry.keyword ? (
+                    <span className="text-gray-300">{entry.keyword}</span>
+                  ) : (
+                    <span className="text-gray-600">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-xs whitespace-nowrap">
                   {entry.dateFrom ? (
